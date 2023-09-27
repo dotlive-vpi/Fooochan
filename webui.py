@@ -10,9 +10,46 @@ import modules.async_worker as worker
 import modules.flags as flags
 import modules.gradio_hijack as grh
 import comfy.model_management as model_management
+import json, requests
+import subprocess
 
 from modules.sdxl_styles import style_keys, aspect_ratios, fooocus_expansion, default_styles
 
+def download_inner(t0,t1,t2,t3,t4,t5,t6):
+    result = ""
+    i = 0
+    ts = [t0,t1,t2,t3,t4,t5,t6]
+    for t in ts:
+        res = download_url(t, i)
+        result = result + "\n" + res
+        i += 1
+    return
+
+def download_url(urltext, model_id):
+    result = ""
+    modelName = ("checkpoints", "vae", "loras", "embeddings", "controlnet", "upscale_models", "hypernetworks")
+    path = f"/content/ComfyUI/models/{modelName[model_id]}"
+    num = 0
+    urls = urltext.split('\n')
+    if not urltext == "":
+        maxn = len(urls)
+        for url in urls:
+            print(f"{modelName[model_id]} downloading {num/maxn*100}%")
+            name = url.split('/')[-1]
+            if name == "":
+                continue
+            if name.split('.')[-1] == name:
+                print(f"Connecting to Civitai for downloading from {url}")
+                response = requests.get(f"https://civitai.com/api/v1/model-versions/{name}")
+                print(response)
+                res = response.json()
+                name = res['files'][0]['name']
+                print(f"Downloading {name}")
+            subprocess.run(["aria2c", "--console-log-level=error", "-c", "-x", "16", "-s", "16", "-k", "1M", url, "-d", path, "-o", name]) 
+            num += 1
+            result = result + f"\n{name}"
+    num = 0
+    return result
 
 def generate_clicked(*args):
     execution_start_time = time.perf_counter()
@@ -163,6 +200,20 @@ with shared.gradio_root:
                     return results
 
                 model_refresh.click(model_refresh_clicked, [], [base_model, refiner_model] + lora_ctrls, queue=False)
+
+            with gr.Tab(label='Downloader'):
+                t0 = gr.Textbox(label=modelName[0], lines=3)
+                t1 = gr.Textbox(label=modelName[1], lines=3)
+                t2 = gr.Textbox(label=modelName[2], lines=3)
+                t3 = gr.Textbox(label=modelName[3], lines=3)
+                t4 = gr.Textbox(label=modelName[4], lines=3)
+                t5 = gr.Textbox(label=modelName[5], lines=3)
+                t6 = gr.Textbox(label=modelName[6], lines=3)
+                db = gr.Button("Download")
+                noop = gr.Textbox()
+
+  
+                db.click(download_inner, inputs=[t0,t1,t2,t3,t4,t5,t6], outputs=noop)
 
         advanced_checkbox.change(lambda x: gr.update(visible=x), advanced_checkbox, right_col, queue=False)
         ctrls = [
