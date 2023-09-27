@@ -11,43 +11,39 @@ import modules.flags as flags
 import modules.gradio_hijack as grh
 import comfy.model_management as model_management
 import json, requests
-import subprocess
-
+from modules.model_loader import load_file_from_url
 from modules.sdxl_styles import style_keys, aspect_ratios, fooocus_expansion, default_styles
+from modules.path import modelfile_path lorafile_path
 
-def download_inner(t0,t1,t2,t3,t4,t5,t6):
+def download_inner(t0,t1):
     result = ""
     i = 0
-    ts = [t0,t1,t2,t3,t4,t5,t6]
+    ts = [t0,t1]
     for t in ts:
-        res = download_url(t, i)
+        res = download_urls(t, i)
         result = result + "\n" + res
         i += 1
-    return
+    return result
 
-def download_url(urltext, model_id):
+def download_urls(urltext, model_id):
     result = ""
-    modelName = ("checkpoints", "vae", "loras", "embeddings", "controlnet", "upscale_models", "hypernetworks")
-    path = f"/content/ComfyUI/models/{modelName[model_id]}"
+    paths = [modelfile_path, lorafile_path]
     num = 0
     urls = urltext.split('\n')
     if not urltext == "":
         maxn = len(urls)
         for url in urls:
-            print(f"{modelName[model_id]} downloading {num/maxn*100}%")
-            name = url.split('/')[-1]
-            if name == "":
+            file_name = url.split('/')[-1]
+            if file_name == "":
                 continue
-            if name.split('.')[-1] == name:
-                print(f"Connecting to Civitai for downloading from {url}")
+            if file_name.split('.')[-1] == file_name:
                 response = requests.get(f"https://civitai.com/api/v1/model-versions/{name}")
-                print(response)
                 res = response.json()
-                name = res['files'][0]['name']
-                print(f"Downloading {name}")
-            subprocess.run(["aria2c", "--console-log-level=error", "-c", "-x", "16", "-s", "16", "-k", "1M", url, "-d", path, "-o", name]) 
+                file_name = res['files'][0]['name']
+            subprocess.run(["aria2c", "--console-log-level=error", "-c", "-x", "16", "-s", "16", "-k", "1M", url, "-d", path, "-o", file_name]) 
+            load_file_from_url(url=url, model_dir=paths[model_id], file_name=file_name)
             num += 1
-            result = result + f"\n{name}"
+            result = result + f"\n{file_name}"
     num = 0
     return result
 
@@ -202,18 +198,13 @@ with shared.gradio_root:
                 model_refresh.click(model_refresh_clicked, [], [base_model, refiner_model] + lora_ctrls, queue=False)
 
             with gr.Tab(label='Downloader'):
-                t0 = gr.Textbox(label=modelName[0], lines=3)
-                t1 = gr.Textbox(label=modelName[1], lines=3)
-                t2 = gr.Textbox(label=modelName[2], lines=3)
-                t3 = gr.Textbox(label=modelName[3], lines=3)
-                t4 = gr.Textbox(label=modelName[4], lines=3)
-                t5 = gr.Textbox(label=modelName[5], lines=3)
-                t6 = gr.Textbox(label=modelName[6], lines=3)
+                tmodel = gr.Textbox(label="model urls", lines=3)
+                tlora = gr.Textbox(label="lora urls", lines=3)
                 db = gr.Button("Download")
                 noop = gr.Textbox()
 
   
-                db.click(download_inner, inputs=[t0,t1,t2,t3,t4,t5,t6], outputs=noop)
+                db.click(download_inner, inputs=[tmodel, tlora], outputs=noop)
 
         advanced_checkbox.change(lambda x: gr.update(visible=x), advanced_checkbox, right_col, queue=False)
         ctrls = [
