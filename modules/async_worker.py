@@ -46,7 +46,7 @@ def worker():
     @torch.inference_mode()
     def handler(task):
         prompt, negative_prompt, style_selections, performance_selction, \
-            aspect_ratios_selction, image_number, image_seed, sharpness, \
+            aspect_ratios_selction, image_width, image_height, use_manual_size, image_number, image_seed, sharpness, \
             base_model_name, refiner_model_name, \
             l1, w1, l2, w2, l3, w3, l4, w4, l5, w5, \
             input_image_checkbox, current_tab, \
@@ -85,6 +85,10 @@ def worker():
         pipeline.clear_all_caches()  # save memory
 
         width, height = aspect_ratios[aspect_ratios_selction]
+
+        if use_manual_size:
+            width = image_width
+            height = image_height
 
         if input_image_checkbox:
             progressbar(0, 'Image processing ...')
