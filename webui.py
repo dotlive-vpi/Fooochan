@@ -40,7 +40,6 @@ def download_urls(urltext, model_id):
                 response = requests.get(f"https://civitai.com/api/v1/model-versions/{file_name}")
                 res = response.json()
                 file_name = res['files'][0]['name']
-            subprocess.run(["aria2c", "--console-log-level=error", "-c", "-x", "16", "-s", "16", "-k", "1M", url, "-d", path, "-o", file_name]) 
             load_file_from_url(url=url, model_dir=paths[model_id], file_name=file_name)
             num += 1
             result = result + f"\n{file_name}"
