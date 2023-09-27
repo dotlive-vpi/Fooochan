@@ -77,7 +77,7 @@ def generate_clicked(*args):
     return
 
 
-shared.gradio_root = gr.Blocks(title='Fooocus ' + fooocus_version.version, css=modules.html.css).queue()
+shared.gradio_root = gr.Blocks(title='Fooochan 🌱🍒 ' + fooocus_version.version, css=modules.html.css).queue()
 with shared.gradio_root:
     with gr.Row():
         with gr.Column():
@@ -146,8 +146,11 @@ with shared.gradio_root:
         with gr.Column(scale=0.5, visible=False) as right_col:
             with gr.Tab(label='Setting'):
                 performance_selction = gr.Radio(label='Performance', choices=['Speed', 'Quality'], value='Speed')
-                aspect_ratios_selction = gr.Radio(label='Aspect Ratios', choices=list(aspect_ratios.keys()),
+                aspect_ratios_selction = gr.Radio(label='Aspect Ratios template', choices=list(aspect_ratios.keys()),
                                                   value='1152×896', info='width × height')
+                image_width = gr.Slider(label='Image Width', minimum=64, maximum=3072, step=8, value=1024)
+                image_height = gr.Slider(label='Image Height', minimum=64, maximum=3072, step=8, value=1024)
+                use_manual_size = gr.Checkbox(label='Use manual size', value=False)
                 image_number = gr.Slider(label='Image Number', minimum=1, maximum=32, step=1, value=2)
                 negative_prompt = gr.Textbox(label='Negative Prompt', show_label=True, placeholder="Type prompt here.",
                                              info='Describing objects that you do not want to see.')
@@ -206,10 +209,13 @@ with shared.gradio_root:
   
                 db.click(download_inner, inputs=[tmodel, tlora], outputs=noop)
 
+        
         advanced_checkbox.change(lambda x: gr.update(visible=x), advanced_checkbox, right_col, queue=False)
+        
+        aspect_ratios_final_selction = f"{image_width}x{image_height}" if use_manual_size else aspect_ratios_selction
         ctrls = [
             prompt, negative_prompt, style_selections,
-            performance_selction, aspect_ratios_selction, image_number, image_seed, sharpness
+            performance_selction, aspect_ratios_final_selction, image_number, image_seed, sharpness
         ]
         ctrls += [base_model, refiner_model] + lora_ctrls
         ctrls += [input_image_checkbox, current_tab]
@@ -221,6 +227,13 @@ with shared.gradio_root:
             .then(fn=generate_clicked, inputs=ctrls, outputs=[progress_html, progress_window, gallery])\
             .then(lambda: (gr.update(visible=True), gr.update(visible=False)), outputs=[run_button, stop_button])
 
+    gr.Markdown(
+        """___
+   <p style='text-align: center'>
+   Created by .LIVE and cafe VPI
+   <br/>
+   </p>"""
+    )
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--port", type=int, default=None, help="Set the listen port.")
