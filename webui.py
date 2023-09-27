@@ -13,7 +13,7 @@ import comfy.model_management as model_management
 import json, requests
 from modules.model_loader import load_file_from_url
 from modules.sdxl_styles import style_keys, aspect_ratios, fooocus_expansion, default_styles
-from modules.path import modelfile_path lorafile_path
+from modules.path import modelfile_path, lorafile_path
 
 def download_inner(t0,t1):
     result = ""
