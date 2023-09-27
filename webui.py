@@ -11,7 +11,7 @@ import modules.flags as flags
 import modules.gradio_hijack as grh
 import comfy.model_management as model_management
 import json, requests
-from modules.model_loader import load_file_from_url
+import subprocess
 from modules.sdxl_styles import style_keys, aspect_ratios, fooocus_expansion, default_styles
 from modules.path import modelfile_path, lorafile_path
 
@@ -24,6 +24,9 @@ def download_inner(t0,t1):
         result = result + "\n" + res
         i += 1
     return result
+
+def dl_command(url, dir, name):
+    subprocess.run(f"aria2c --console-log-level=error -c -x 16 -s 16 -k 1M {url} -d {dir} -o {name}".split())
 
 def download_urls(urltext, model_id):
     result = ""
@@ -40,7 +43,7 @@ def download_urls(urltext, model_id):
                 response = requests.get(f"https://civitai.com/api/v1/model-versions/{file_name}")
                 res = response.json()
                 file_name = res['files'][0]['name']
-            load_file_from_url(url=url, model_dir=paths[model_id], file_name=file_name)
+            dl_command(url, paths[model_id], file_name)
             num += 1
             result = result + f"\n{file_name}"
     num = 0
