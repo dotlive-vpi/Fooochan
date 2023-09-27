@@ -37,7 +37,7 @@ def download_urls(urltext, model_id):
             if file_name == "":
                 continue
             if file_name.split('.')[-1] == file_name:
-                response = requests.get(f"https://civitai.com/api/v1/model-versions/{name}")
+                response = requests.get(f"https://civitai.com/api/v1/model-versions/{file_name}")
                 res = response.json()
                 file_name = res['files'][0]['name']
             subprocess.run(["aria2c", "--console-log-level=error", "-c", "-x", "16", "-s", "16", "-k", "1M", url, "-d", path, "-o", file_name]) 
