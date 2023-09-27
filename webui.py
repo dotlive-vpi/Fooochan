@@ -214,7 +214,7 @@ with shared.gradio_root:
         
         ctrls = [
             prompt, negative_prompt, style_selections,
-            performance_selction, f"{image_width}x{image_height}" if use_manual_size else aspect_ratios_selction, image_number, image_seed, sharpness
+            performance_selction, aspect_ratios_selction, image_width, image_height, use_manual_size, image_number, image_seed, sharpness
         ]
         ctrls += [base_model, refiner_model] + lora_ctrls
         ctrls += [input_image_checkbox, current_tab]
